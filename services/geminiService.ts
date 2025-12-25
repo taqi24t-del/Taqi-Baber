@@ -3,10 +3,15 @@ import { GoogleGenAI } from "@google/genai";
 import { Service, Appointment } from "../types";
 
 export class GeminiAssistant {
-  private ai: GoogleGenAI;
-
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  private getAIInstance(): GoogleGenAI | null {
+    try {
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) return null;
+      return new GoogleGenAI({ apiKey });
+    } catch (e) {
+      console.error("Failed to initialize GoogleGenAI:", e);
+      return null;
+    }
   }
 
   async generateResponse(
@@ -15,6 +20,12 @@ export class GeminiAssistant {
     appointments: Appointment[],
     currentDate: string
   ) {
+    const ai = this.getAIInstance();
+
+    if (!ai) {
+      return "I'm having trouble connecting to my brain (API Key missing). Please ensure your environment is configured correctly.";
+    }
+
     const servicesContext = services.map(s => `- ${s.name}: ${s.description} (${s.price})`).join('\n');
     const bookingsContext = appointments
       .filter(a => a.date === currentDate)
@@ -42,7 +53,7 @@ export class GeminiAssistant {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
+      const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: userMessage,
         config: {
@@ -53,7 +64,7 @@ export class GeminiAssistant {
       return response.text || "I'm sorry, I'm having trouble connecting to the barber network. Please try again.";
     } catch (error) {
       console.error("Gemini Error:", error);
-      return "Something went wrong. Please check your settings or try again later.";
+      return "I encountered an error processing your request. Please try again or use the manual booking calendar.";
     }
   }
 }

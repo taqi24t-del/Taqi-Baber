@@ -1,5 +1,5 @@
 {
-  "name": "Copy of BarberFlow AI",
+  "name": "BarberFlow AI",
   "description": "A premium barbershop scheduling app featuring a Gemini-powered AI assistant, calendar booking, and dynamic service management.",
   "requestFramePermissions": [
     "microphone"

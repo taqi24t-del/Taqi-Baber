@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Service, Appointment } from '../types';
 import { BUSINESS_HOURS, Icons } from '../constants';
 
@@ -12,12 +12,18 @@ interface CalendarViewProps {
 const CalendarView: React.FC<CalendarViewProps> = ({ appointments, services, onBook }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id || '');
+  const [selectedServiceId, setSelectedServiceId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Generate slots
+  // Ensure a service is selected by default when services list changes
+  useEffect(() => {
+    if (services.length > 0 && !selectedServiceId) {
+      setSelectedServiceId(services[0].id);
+    }
+  }, [services, selectedServiceId]);
+
   const generateSlots = () => {
     const slots = [];
     for (let hour = BUSINESS_HOURS.start; hour < BUSINESS_HOURS.end; hour++) {
@@ -62,18 +68,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, services, onB
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center animate-bounce">
-        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-black mb-4">
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center animate-fadeIn">
+        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-black mb-4 shadow-lg">
           <Icons.Check />
         </div>
-        <h2 className="text-3xl font-playfair mb-2">Booking Confirmed!</h2>
+        <h2 className="text-3xl font-playfair mb-2 text-[#D4AF37]">Booking Confirmed!</h2>
         <p className="text-gray-400">We'll see you on {selectedDate} at {selectedTime}.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12 animate-fadeIn">
       <div className="lg:col-span-2 space-y-6">
         <div className="bg-[#121212] p-6 rounded-3xl border border-[#262626]">
           <h2 className="text-2xl font-playfair mb-6 flex items-center gap-2">
@@ -107,7 +113,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, services, onB
                   }`}
                 >
                   {time}
-                  {booked && <span className="block text-[8px] uppercase">Booked</span>}
+                  {booked && <span className="block text-[8px] uppercase opacity-50">Booked</span>}
                 </button>
               );
             })}
@@ -126,6 +132,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, services, onB
                 onChange={(e) => setSelectedServiceId(e.target.value)}
                 className="w-full bg-[#1a1a1a] text-white border border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#D4AF37]"
               >
+                {services.length === 0 && <option value="">No services available</option>}
                 {services.map(s => (
                   <option key={s.id} value={s.id}>{s.name} ({s.price})</option>
                 ))}
@@ -166,9 +173,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, services, onB
                 </div>
               </div>
               <button
-                disabled={!selectedTime || !customerName || !mobileNumber}
+                disabled={!selectedTime || !customerName || !mobileNumber || !selectedServiceId}
                 onClick={handleBook}
-                className="w-full bg-[#D4AF37] text-black py-4 rounded-2xl font-bold hover:bg-[#facc15] transition-all disabled:opacity-30 active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-[#D4AF37] text-black py-4 rounded-2xl font-bold hover:bg-[#facc15] transition-all disabled:opacity-30 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
               >
                 <Icons.Check /> Confirm Booking
               </button>
